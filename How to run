@@ -1,0 +1,28 @@
+The following steps should be taken.
+blockMesh
+surfaceFeatureExtract
+snappyHexMesh > snappy &
+copy "polyMesh" directory from "2e-5" to "constant"
+remove 1e-5 and 2e-5
+
+serial:
+	MPPICFoam > log_potential
+parallel:
+	decomposePar
+	foamJob -screen -parallel MPPICFoam > log_potential
+	reconstructPar
+
+#you can see result in paraview with "paraFoam" command
+
+remove "0.01"
+change "endTime 0.02" to "endTime 0.05" in controlDict
+change "writeInterval 1000" to "writeInterval 200" in controlDict
+
+serial:
+	MPPICFoam > log_particle
+parallel:
+	decomposePar
+	foamJob -screen -parallel MPPICFoam > log_particle
+	reconstructPar
+paraFoam
+load state "impactor.pvsm"

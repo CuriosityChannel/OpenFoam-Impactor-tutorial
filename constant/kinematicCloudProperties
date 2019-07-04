@@ -1,0 +1,156 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  6
+     \\/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "constant";
+    object      particleProperties;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+solution
+{
+    active          true;
+    coupled         true;
+    transient       yes;
+    cellValueSourceCorrection on;
+
+    interpolationSchemes
+    {
+        rho.air         cell;
+        U.air           cellPoint;
+        mu.air          cell;
+    }
+
+    averagingMethod basic;
+
+    integrationSchemes
+    {
+        U               Euler;
+    }
+
+    sourceTerms
+    {
+        schemes
+        {
+            U semiImplicit 1;
+        }
+    }
+}
+
+constantProperties
+{
+    rho0            1000;//for particle
+
+    alphaMax        0.9;//for particle
+}
+
+subModels
+{
+    particleForces
+    {
+	sphereDrag;
+	gravity;
+    }
+
+    injectionModels
+    {
+        model1
+        {
+            type            patchInjection;
+            parcelBasisType fixed;
+            patchName       inlet;
+            U0              (0 0 0);//particle velocity
+            nParticle       1;
+            parcelsPerSecond 50000000;//number of particle in 1s. 500 particle will add in each time step. totally 1000
+            sizeDistribution
+            {
+                type        fixedValue;
+                fixedValueDistribution
+                {
+			value 0.000001;//1e-6=1micron
+                }
+            }
+            flowRateProfile constant 1;
+            massTotal       10;
+            SOI 0.02;//start time of particle injection
+            duration 1e-5;//particle will inject to model in 2 time step. 0 and 1e-5
+        }
+
+    }
+
+    dispersionModel none;
+
+    patchInteractionModel localInteraction;
+
+    localInteractionCoeffs
+    {
+        patches
+        (
+            absorber
+            {
+                type stick;
+            }
+
+            wall
+            {
+                type rebound;
+                e    1;
+                mu   0;
+            }
+
+            "inlet|outlet"
+            {
+                type escape;
+            }
+        );
+    }
+
+    heatTransferModel none;
+
+    surfaceFilmModel none;
+
+    packingModel none;
+
+    dampingModel relaxation;
+
+    relaxationCoeffs
+    {
+        timeScaleModel
+        {
+            type nonEquilibrium;
+            alphaPacked 0.58;
+            e 0.9;
+        }
+    }
+
+    isotropyModel stochastic;
+
+    stochasticCoeffs
+    {
+        timeScaleModel
+        {
+            type isotropic;
+            alphaPacked 0.58;
+            e 0.9;
+        }
+    }
+
+    stochasticCollisionModel none;
+
+    radiation off;
+}
+
+
+cloudFunctions
+{}
+
+
+// ************************************************************************* //
